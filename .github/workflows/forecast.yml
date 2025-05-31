@@ -32,8 +32,8 @@ jobs:
           name: test_file
           path: README.md
 
-      - name: Upload SQLite database
-        uses: actions/upload-artifact@v3.1.2
-        with:
-          name: nbm_forecasts
-          path: nbm_forecast_data.db
+#      - name: Upload SQLite database
+#        uses: actions/upload-artifact@v3.1.2
+#        with:
+#          name: nbm_forecasts
+#          path: nbm_forecast_data.db
