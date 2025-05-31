@@ -56,7 +56,7 @@ def store_in_s3(df):
     s3_base_path = "s3://weather-forecasts-dzel/NBM"
     
     # Initialize S3 filesystem (uses your AWS credentials automatically)
-    fs = s3fs.S3FileSystem(profile='default')
+    fs = s3fs.S3FileSystem()
     
     date_str = mtn_now().strftime('%Y-%m-%d')
  
