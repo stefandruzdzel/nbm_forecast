@@ -1,0 +1,36 @@
+name: Fetch NBM Forecasts
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 */3 * * *'  # Every 3 hours UTC
+  workflow_dispatch:        # Allow manual runs from GitHub
+
+jobs:
+  run-forecast
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run forecast script
+        run: python fetch_nbm_forecasts.py
+
+      - name: Upload SQLite database
+        uses: actions/upload-artifact@v3
+        with:
+          name: nbm_forecasts
+          path: nbm_forecast_data.db
