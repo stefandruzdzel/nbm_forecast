@@ -25,6 +25,12 @@ jobs:
 
       - name: Run forecast script
         run: python fetch_nbm_forecasts.py
+      
+      - name: Upload test file
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: test_file
+          path: README.md
 
       - name: Upload SQLite database
         uses: actions/upload-artifact@v3
