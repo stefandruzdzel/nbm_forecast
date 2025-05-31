@@ -3,29 +3,15 @@ import pandas as pd
 import datetime as dt
 import sqlite3
 import logging
+import pyarrow as pa
+import pyarrow.parquet as pq
+import s3fs
+import pytz
 
-def init_db(db_path="nbm_forecast_data.db"):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS nbm_forecasts (
-            Name TEXT,
-            Retreive_DT TEXT,
-            startTime TEXT,
-            endTime TEXT,
-            isDaytime INTEGER,
-            temperature REAL,
-            temperatureUnit TEXT,
-            temperatureTrend TEXT,
-            probabilityOfPrecipitation REAL,
-            windSpeed REAL,
-            windDirection TEXT,
-            shortForecast TEXT
-        )
-    """)
-    conn.commit()
-    return conn
 
+def mtn_now():
+    mountain_tz = pytz.timezone("America/Denver")
+    return dt.datetime.now(mountain_tz)
 
 def get_nbm_forecast(name, lat, lon):
     try:
@@ -45,7 +31,7 @@ def get_nbm_forecast(name, lat, lon):
     
         # Step 3: Extract useful info
         periods = forecast_data["properties"]["periods"]
-        retreive_dt = dt.datetime.now()
+        retreive_dt = mtn_now()
         # cut out detailedForecast in the interest of saving memory
         data = pd.DataFrame(columns=['Name','Retreive_DT','startTime', 'endTime', 'isDaytime', 'temperature', 'temperatureUnit', 'temperatureTrend', 'probabilityOfPrecipitation', 'windSpeed', 'windDirection', 'shortForecast'])
     except Exception as e:
@@ -65,21 +51,45 @@ def get_nbm_forecast(name, lat, lon):
     return data
 
 
+def store_in_s3(df):
+    # S3 bucket base path
+    s3_base_path = "s3://weather-forecasts-dzel/NBM"
+    
+    # Initialize S3 filesystem (uses your AWS credentials automatically)
+    fs = s3fs.S3FileSystem(profile='default')
+    
+    date_str = mtn_now().strftime('%Y-%m-%d')
+ 
+    # Convert to pyarrow Table
+    table = pa.Table.from_pandas(df)
+    
+    # Create a filename with timestamp for uniqueness (e.g., time you run the job)
+    timestamp = mtn_now().strftime("%H%M%S")
+    s3_path = f"{s3_base_path}/date={date_str}/forecast_{timestamp}.parquet"
+    
+    # Write parquet directly to S3
+    with fs.open(s3_path, 'wb') as f:
+        pq.write_table(table, f)
+    
+    print(f"Written partition for {date_str} to {s3_path}")
+    
+    
 def main():
+# if 1 == 1:
     # Log to console with INFO level or higher
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-
 
     locations = pd.read_csv('locations.csv')
     
     df = pd.DataFrame()
     for _, row in locations.iterrows():
         df = pd.concat([df,get_nbm_forecast(row.Name, row.Lat, row.Lon)])
-        
-    conn = init_db()
-    df.to_sql("nbm_forecasts", conn, if_exists="append", index=False)
-
-    # df = pd.read_sql("SELECT * FROM nbm_forecasts", sqlite3.connect("nbm_forecast_data.db"))
     
+    try:
+        store_in_s3(df)
+    except Exception as e:
+        logging.error('Failed to store in S3',exc_info=True)
+        
+        
 if __name__ == "__main__":
     main()
