@@ -6,7 +6,7 @@ on:
   workflow_dispatch:        # Allow manual runs from GitHub
 
 jobs:
-  run-forecast
+  fetch:
     runs-on: ubuntu-latest
 
     steps:
