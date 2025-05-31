@@ -26,8 +26,8 @@ jobs:
       - name: Run forecast script
         run: python fetch_nbm_forecasts.py
 
-#      - name: Upload SQLite database
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: nbm_forecasts
-#          path: nbm_forecast_data.db
+      - name: Upload SQLite database
+        uses: actions/upload-artifact@v3
+        with:
+          name: nbm_forecasts
+          path: nbm_forecast_data.db
