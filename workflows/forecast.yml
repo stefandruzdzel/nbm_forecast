@@ -1,9 +1,6 @@
 name: Fetch NBM Forecasts
 
 on:
-  push:
-    branches:
-      - master
   schedule:
     - cron: '0 */3 * * *'  # Every 3 hours UTC
   workflow_dispatch:        # Allow manual runs from GitHub
