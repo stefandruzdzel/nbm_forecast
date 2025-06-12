@@ -8,6 +8,7 @@ import pyarrow.parquet as pq
 import s3fs
 import pytz
 
+#https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt
 
 def mtn_now():
     mountain_tz = pytz.timezone("America/Denver")
