@@ -81,6 +81,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
     locations = pd.read_csv('locations.csv')
+    locations = locations.drop_duplicates(['Station_ID']) # duplicates exist for high and low markets, only need to get the weather once
     
     df = pd.DataFrame()
     for _, row in locations.iterrows():
